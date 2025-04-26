@@ -17,6 +17,7 @@ st.sidebar.markdown(description)
 st.sidebar.header("Parameters")
 deck_size = st.sidebar.slider("Deck Size", min_value=30, max_value=60, value=40, step=1)
 num_target_cards = st.sidebar.slider("Number of Χ cards in Deck", min_value=1, max_value=5, value=1, step=1)
+initial_hand_size = st.sidebar.slider("Initial Hand Size", min_value=1, max_value=10, value=5, step=1)
 num_rounds = st.sidebar.slider("Number of Rounds to Simulate", min_value=1, max_value=10, value=3, step=1)
 
 # Footer
@@ -32,11 +33,20 @@ def prob_at_least_one_X(N, k, drawn):
         return 1.0
     return 1 - (comb(N - k, drawn) / comb(N, drawn))
 
+# Determine line color based on deck size
+def get_color(deck_size):
+    if deck_size <= 40:
+        return '#4f81bd'  # blue shades
+    elif deck_size <= 50:
+        return '#70ad47'  # green shades
+    else:
+        return '#c0504d'  # red shades
+
 # Calculate probabilities per round
 rounds = list(range(1, num_rounds + 1))
 probs = []
 for r in rounds:
-    drawn_cards = 5 + (r - 1)
+    drawn_cards = initial_hand_size + (r - 1)
     prob = prob_at_least_one_X(deck_size, num_target_cards, drawn_cards)
     probs.append(round(prob * 100, 2))
 
@@ -48,7 +58,8 @@ df = pd.DataFrame({
 
 # Plotting
 fig, ax = plt.subplots(figsize=(10, 6))
-ax.plot(rounds, probs, marker='o', color='#1f77b4')
+line_color = get_color(deck_size)
+ax.plot(rounds, probs, marker='o', color=line_color)
 for x, y in zip(rounds, probs):
     ax.text(x, y + 1.5, f"{y:.1f}%", ha='center', va='bottom', fontsize=8)
 
