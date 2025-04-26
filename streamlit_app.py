@@ -34,14 +34,16 @@ def prob_at_least_one_X(N, k, drawn):
         return 1.0
     return 1 - (comb(N - k, drawn) / comb(N, drawn))
 
-# Determine line color based on deck size
-def get_color(deck_size):
-    if deck_size <= 40:
-        return '#4f81bd'  # blue shades
-    elif deck_size <= 50:
-        return '#70ad47'  # green shades
+# Determine line color based on probability
+def get_dynamic_color(probability):
+    if probability >= 75:
+        return '#ff5733'  # intense red-orange
+    elif probability >= 50:
+        return '#ffc300'  # strong yellow
+    elif probability >= 33:
+        return '#70ad47'  # green
     else:
-        return '#c0504d'  # red shades
+        return '#4f81bd'  # blue
 
 # Layout
 st.title("🎴 Yu-Gi-Oh! Card Draw Probabilities")
@@ -52,6 +54,7 @@ with st.container():
     rounds = []
     probs = []
     hover_texts = []
+    colors = []
     highlight_round = None
     for r in range(1, num_rounds + 1):
         drawn_cards = initial_hand_size + (r - 1)
@@ -59,6 +62,7 @@ with st.container():
         prob_percent = round(prob * 100, 2)
         rounds.append(r)
         probs.append(prob_percent)
+        colors.append(get_dynamic_color(prob_percent))
 
         if prob_percent >= 50:
             emoji = "🔥"
@@ -66,7 +70,7 @@ with st.container():
             emoji = "⚡"
         else:
             emoji = "✨"
-        hover_texts.append(f"Round {r}: {prob_percent}% {emoji}")
+        hover_texts.append(f"🔢 Round: {r}<br>🎯 Probability: {prob_percent}% {emoji}")
 
         if highlight_round is None and prob_percent >= 33.0:
             highlight_round = r
@@ -77,30 +81,47 @@ with st.container():
     df = pd.DataFrame({
         "Round": rounds,
         "Probability (%)": probs,
-        "Hover Text": hover_texts
+        "Hover Text": hover_texts,
+        "Color": colors
     })
 
     # Plotting with Plotly for tooltips and animation
     fig = go.Figure()
-    fig.add_trace(go.Scatter(
-        x=df["Round"],
-        y=df["Probability (%)"],
-        mode="lines+markers",
-        marker=dict(size=10, symbol="circle", line=dict(width=2, color="DarkSlateGrey")),
-        line=dict(color=get_color(deck_size), width=3),
-        hovertext=df["Hover Text"],
-        hoverinfo="text"
-    ))
+    for i in range(len(df)):
+        fig.add_trace(go.Scatter(
+            x=[df["Round"][i]],
+            y=[df["Probability (%)"][i]],
+            mode="markers+lines",
+            marker=dict(size=10, color=df["Color"][i], line=dict(width=2, color="DarkSlateGrey")),
+            line=dict(color=df["Color"][i], width=3),
+            hovertext=df["Hover Text"][i],
+            hoverinfo="text"
+        ))
 
     fig.update_layout(
         title="Probability of Drawing at Least One Χ Card",
         xaxis_title="Round",
         yaxis_title="Probability (%)",
         yaxis_range=[0, max(probs) + 5],
-        hovermode="x unified",
+        hovermode="closest",
         transition_duration=500,
         height=400,
     )
 
     # Highlight 33% point
     if highlight_round is not None and highlight_round in rounds:
+        fig.add_vline(
+            x=highlight_round,
+            line_dash="dash",
+            line_color="orange",
+            annotation_text="33% Threshold",
+            annotation_position="top",
+        )
+
+    with st.expander("📊 Probability Chart", expanded=True):
+        st.plotly_chart(fig, use_container_width=True)
+
+    with st.expander("📋 Probability Table"):
+        st.dataframe(df[["Round", "Probability (%)"]], use_container_width=True)
+
+st.toast("Probabilities calculated successfully!", icon="✅")
