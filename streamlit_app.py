@@ -21,7 +21,7 @@ num_rounds = st.sidebar.slider("Number of Rounds to Simulate", min_value=1, max_
 # Footer
 footer = """
 ---
-© 2025 Knowd1. All rights reserved.
+© 2025 ______ All rights reserved.
 """
 st.sidebar.markdown(footer)
 
