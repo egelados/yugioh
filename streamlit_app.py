@@ -2,6 +2,7 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+import plotly.graph_objects as go
 from math import comb
 
 st.set_page_config(page_title="Yu-Gi-Oh! Card Draw Probabilities", layout="wide")
@@ -50,6 +51,7 @@ with st.container():
     # Calculate probabilities per round
     rounds = []
     probs = []
+    hover_texts = []
     highlight_round = None
     for r in range(1, num_rounds + 1):
         drawn_cards = initial_hand_size + (r - 1)
@@ -57,6 +59,15 @@ with st.container():
         prob_percent = round(prob * 100, 2)
         rounds.append(r)
         probs.append(prob_percent)
+
+        if prob_percent >= 50:
+            emoji = "🔥"
+        elif prob_percent >= 33:
+            emoji = "⚡"
+        else:
+            emoji = "✨"
+        hover_texts.append(f"Round {r}: {prob_percent}% {emoji}")
+
         if highlight_round is None and prob_percent >= 33.0:
             highlight_round = r
         if prob_percent >= 100.0:
@@ -65,41 +76,31 @@ with st.container():
     # Displaying the data as a DataFrame
     df = pd.DataFrame({
         "Round": rounds,
-        "Probability (%)": probs
+        "Probability (%)": probs,
+        "Hover Text": hover_texts
     })
 
     # Plotting with Plotly for tooltips and animation
-    fig = px.line(
-        df,
-        x="Round",
-        y="Probability (%)",
-        markers=True,
-        title="Probability of Drawing at Least One Χ Card",
-    )
-    fig.update_traces(line_color=get_color(deck_size))
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(
+        x=df["Round"],
+        y=df["Probability (%)"],
+        mode="lines+markers",
+        marker=dict(size=10, symbol="circle", line=dict(width=2, color="DarkSlateGrey")),
+        line=dict(color=get_color(deck_size), width=3),
+        hovertext=df["Hover Text"],
+        hoverinfo="text"
+    ))
+
     fig.update_layout(
+        title="Probability of Drawing at Least One Χ Card",
         xaxis_title="Round",
         yaxis_title="Probability (%)",
         yaxis_range=[0, max(probs) + 5],
         hovermode="x unified",
         transition_duration=500,
-        height=400,  # Limit the chart height
+        height=400,
     )
 
     # Highlight 33% point
     if highlight_round is not None and highlight_round in rounds:
-        fig.add_vline(
-            x=highlight_round,
-            line_dash="dash",
-            line_color="orange",
-            annotation_text="33% Threshold",
-            annotation_position="top",
-        )
-
-    with st.expander("📊 Probability Chart", expanded=True):
-        st.plotly_chart(fig, use_container_width=True)
-
-    with st.expander("📋 Probability Table"):
-        st.dataframe(df, use_container_width=True)
-
-st.toast("Probabilities calculated successfully!", icon="✅")
