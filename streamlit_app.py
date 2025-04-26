@@ -83,10 +83,11 @@ with st.container():
         yaxis_range=[0, max(probs) + 5],
         hovermode="x unified",
         transition_duration=500,
+        height=400,  # Limit the chart height
     )
 
     # Highlight 33% point
-    if highlight_round is not None:
+    if highlight_round is not None and highlight_round in rounds:
         fig.add_vline(
             x=highlight_round,
             line_dash="dash",
