@@ -1,7 +1,7 @@
 # Title: Yu-Gi-Oh! Card Draw Probabilities
 import streamlit as st
 import pandas as pd
-import matplotlib.pyplot as plt
+import plotly.express as px
 from math import comb
 
 st.set_page_config(page_title="Yu-Gi-Oh! Card Draw Probabilities", layout="wide")
@@ -48,12 +48,19 @@ st.title("🎴 Yu-Gi-Oh! Card Draw Probabilities")
 # Container for live updates
 with st.container():
     # Calculate probabilities per round
-    rounds = list(range(1, num_rounds + 1))
+    rounds = []
     probs = []
-    for r in rounds:
+    highlight_round = None
+    for r in range(1, num_rounds + 1):
         drawn_cards = initial_hand_size + (r - 1)
         prob = prob_at_least_one_X(deck_size, num_target_cards, drawn_cards)
-        probs.append(round(prob * 100, 2))
+        prob_percent = round(prob * 100, 2)
+        rounds.append(r)
+        probs.append(prob_percent)
+        if highlight_round is None and prob_percent >= 33.0:
+            highlight_round = r
+        if prob_percent >= 100.0:
+            break
 
     # Displaying the data as a DataFrame
     df = pd.DataFrame({
@@ -61,22 +68,35 @@ with st.container():
         "Probability (%)": probs
     })
 
-    # Plotting
-    fig, ax = plt.subplots(figsize=(10, 6))
-    line_color = get_color(deck_size)
-    ax.plot(rounds, probs, marker='o', color=line_color)
-    for x, y in zip(rounds, probs):
-        ax.text(x, y + 1.5, f"{y:.1f}%", ha='center', va='bottom', fontsize=8)
+    # Plotting with Plotly for tooltips and animation
+    fig = px.line(
+        df,
+        x="Round",
+        y="Probability (%)",
+        markers=True,
+        title="Probability of Drawing at Least One Χ Card",
+    )
+    fig.update_traces(line_color=get_color(deck_size))
+    fig.update_layout(
+        xaxis_title="Round",
+        yaxis_title="Probability (%)",
+        yaxis_range=[0, max(probs) + 5],
+        hovermode="x unified",
+        transition_duration=500,
+    )
 
-    ax.set_title("Probability of Drawing at Least One Χ Card")
-    ax.set_xlabel("Round")
-    ax.set_ylabel("Probability (%)")
-    ax.set_xticks(rounds)
-    ax.set_ylim(0, max(probs) + 5)
-    ax.grid(True, linestyle='--', alpha=0.6)
+    # Highlight 33% point
+    if highlight_round is not None:
+        fig.add_vline(
+            x=highlight_round,
+            line_dash="dash",
+            line_color="orange",
+            annotation_text="33% Threshold",
+            annotation_position="top",
+        )
 
     with st.expander("📊 Probability Chart", expanded=True):
-        st.pyplot(fig)
+        st.plotly_chart(fig, use_container_width=True)
 
     with st.expander("📋 Probability Table"):
         st.dataframe(df, use_container_width=True)
