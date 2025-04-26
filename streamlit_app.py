@@ -87,16 +87,15 @@ with st.container():
 
     # Plotting with Plotly for tooltips and animation
     fig = go.Figure()
-    for i in range(len(df)):
-        fig.add_trace(go.Scatter(
-            x=[df["Round"][i]],
-            y=[df["Probability (%)"][i]],
-            mode="markers+lines",
-            marker=dict(size=10, color=df["Color"][i], line=dict(width=2, color="DarkSlateGrey")),
-            line=dict(color=df["Color"][i], width=3),
-            hovertext=df["Hover Text"][i],
-            hoverinfo="text"
-        ))
+    fig.add_trace(go.Scatter(
+        x=df["Round"],
+        y=df["Probability (%)"],
+        mode="lines+markers",
+        marker=dict(size=10, color=df["Color"], line=dict(width=2, color="DarkSlateGrey")),
+        line=dict(color="#888", width=2),
+        hovertext=df["Hover Text"],
+        hoverinfo="text"
+    ))
 
     fig.update_layout(
         title="Probability of Drawing at Least One Χ Card",
@@ -125,3 +124,4 @@ with st.container():
         st.dataframe(df[["Round", "Probability (%)"]], use_container_width=True)
 
 st.toast("Probabilities calculated successfully!", icon="✅")
+
