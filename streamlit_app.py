@@ -42,40 +42,43 @@ def get_color(deck_size):
     else:
         return '#c0504d'  # red shades
 
-# Calculate probabilities per round
-rounds = list(range(1, num_rounds + 1))
-probs = []
-for r in rounds:
-    drawn_cards = initial_hand_size + (r - 1)
-    prob = prob_at_least_one_X(deck_size, num_target_cards, drawn_cards)
-    probs.append(round(prob * 100, 2))
-
-# Displaying the data as a DataFrame
-df = pd.DataFrame({
-    "Round": rounds,
-    "Probability (%)": probs
-})
-
-# Plotting
-fig, ax = plt.subplots(figsize=(10, 6))
-line_color = get_color(deck_size)
-ax.plot(rounds, probs, marker='o', color=line_color)
-for x, y in zip(rounds, probs):
-    ax.text(x, y + 1.5, f"{y:.1f}%", ha='center', va='bottom', fontsize=8)
-
-ax.set_title("Probability of Drawing at Least One Χ Card")
-ax.set_xlabel("Round")
-ax.set_ylabel("Probability (%)")
-ax.set_xticks(rounds)
-ax.set_ylim(0, max(probs) + 5)
-ax.grid(True, linestyle='--', alpha=0.6)
-
 # Layout
 st.title("🎴 Yu-Gi-Oh! Card Draw Probabilities")
-with st.expander("📊 Probability Chart", expanded=True):
-    st.pyplot(fig)
 
-with st.expander("📋 Probability Table"):
-    st.dataframe(df, use_container_width=True)
+# Container for live updates
+with st.container():
+    # Calculate probabilities per round
+    rounds = list(range(1, num_rounds + 1))
+    probs = []
+    for r in rounds:
+        drawn_cards = initial_hand_size + (r - 1)
+        prob = prob_at_least_one_X(deck_size, num_target_cards, drawn_cards)
+        probs.append(round(prob * 100, 2))
+
+    # Displaying the data as a DataFrame
+    df = pd.DataFrame({
+        "Round": rounds,
+        "Probability (%)": probs
+    })
+
+    # Plotting
+    fig, ax = plt.subplots(figsize=(10, 6))
+    line_color = get_color(deck_size)
+    ax.plot(rounds, probs, marker='o', color=line_color)
+    for x, y in zip(rounds, probs):
+        ax.text(x, y + 1.5, f"{y:.1f}%", ha='center', va='bottom', fontsize=8)
+
+    ax.set_title("Probability of Drawing at Least One Χ Card")
+    ax.set_xlabel("Round")
+    ax.set_ylabel("Probability (%)")
+    ax.set_xticks(rounds)
+    ax.set_ylim(0, max(probs) + 5)
+    ax.grid(True, linestyle='--', alpha=0.6)
+
+    with st.expander("📊 Probability Chart", expanded=True):
+        st.pyplot(fig)
+
+    with st.expander("📋 Probability Table"):
+        st.dataframe(df, use_container_width=True)
 
 st.toast("Probabilities calculated successfully!", icon="✅")
