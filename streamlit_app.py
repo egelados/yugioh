@@ -10,6 +10,7 @@ st.set_page_config(page_title="Yu-Gi-Oh! Card Draw Probabilities", layout="wide"
 description = """
 Calculate and visualize the probability of drawing specific cards in a Yu-Gi-Oh! duel!
 """
+st.sidebar.image("resources/Yugi.png")
 st.sidebar.markdown(description)
 
 # Sidebar parameters
